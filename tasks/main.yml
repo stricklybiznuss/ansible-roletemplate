@@ -1,2 +1,58 @@
 ---
+- name: Copy Telegraf
+  ansible.builtin.get_url:
+    url: "{{ telegraf_url }}"
+    dest: "{{ telegraf_tmp_rpm }}"
+    checksum: sha256:{{ telegraf_sha256 }}
+
+- name: Install Telegraf
+  ansible.builtin.yum: 
+    name: "{{ telegraf_tmp_rpm }}"
+    state: present
+
+- name: get metadata
+  shell: "curl -H Metadata:true http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01"
+  register: azure_metadata
+  changed_when: no
+  when: telegraf_report_azure
+
+- name: "set azure_metadata"
+  set_fact:
+    azure_metadata: "{{ azure_metadata.stdout | from_json }}"
+  when: telegraf_report_azure
+
+- name: Template Main Config
+  ansible.builtin.template:
+    src: etc_telegraf_telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    mode: "{{ telegraf_mask }}"
+  notify: restart_telegraf
+  
+- name: Template Azure Config
+  ansible.builtin.template:
+    src: etc_telegraf_telegrafd_azm.conf.j2
+    dest: /etc/telegraf/telegraf.d/azm.conf
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    mode: "{{ telegraf_mask }}"
+  when: telegraf_report_azure
+  notify: restart_telegraf
+
+- name: Template Default Config
+  ansible.builtin.copy:
+    src: etc_telegraf_telegrafd_default.conf
+    dest: /etc/telegraf/telegraf.d/default.conf
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    mode: "{{ telegraf_mask }}"
+  when: telegraf_default_checks 
+  notify: restart_telegraf
+
+- name: Start Telegraf Service
+  ansible.builtin.service:
+    name: telegraf
+    state: started
+
 # tasks

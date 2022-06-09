@@ -1,0 +1,6 @@
+---
+- name: Telegraf Service | Restart
+  service:
+    name: telegraf
+    state: restarted
+  listen: restart_telegraf

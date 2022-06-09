@@ -1,2 +1,16 @@
 ---
 # ansible default variables - most variables live here
+telegraf_url: "https://dl.influxdata.com/telegraf/releases/telegraf-1.21.2-1.x86_64.rpm"
+telegraf_sha256: "02d34d0b2f2e64ba8c94807f85499338eead972291b7efe3d9e6ea1e494a5c57"
+
+
+
+# default telegraf variables
+telegraf_agent_interval: "10s"
+telegraf_agent_round: true
+telegraf_default_checks: true
+telegraf_report_azure: false
+
+telegraf_user: root
+telegraf_group: root
+telegraf_mask: 0640
